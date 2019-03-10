@@ -1,0 +1,8 @@
+agent contains all elevators
+init containts either:
+	- at which contains an elevator and its current floor position
+	- request which contains either:
+		- deliver which contains the number of the elevator and a number of the floor to which the elevator should bring people
+		- call (with an apparently irrelevant up/down) and a number of a floor from which the call was made
+holds is innitially a copy of init + a time step
+do contains an elevator, an action (move(1), move(-1) or serve - move up, down or serve current floor and a time step
