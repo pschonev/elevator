@@ -111,7 +111,8 @@ class Solver():
                 self.grounded += 1
 
             self.control.assign_external(clingo.Function("query", [self.step]), True)
-            self.ret = self.control.solve(self.on_model)
+            #self.ret = self.control.solve(self.on_model)
+            self.control.solve(on_model=self.on_model)
             self.control.release_external(clingo.Function("query", [self.step]))
 
             self.step = self.step + 1
