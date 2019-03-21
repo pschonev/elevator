@@ -37,8 +37,13 @@ current_pos(X,N,t):-not do(X,_,t),holds(at(X,N),t-1).
 :- not do(X,serve,t), holds(request(_,Y),t-1), holds(at(X,Y),t-1).
 
 %stop elevator from going into a direction where there is no request
+%doesn't work
+%:- do(X,move(1),t), holds(at(X,Y),t-1), not holds(request(_,Z),t),floor(Z),Z>Y.
 
+%maybe doesn't help
 %after elevator moved he has to do an action (move or serve) in the next timestep
+:- do(X,move(1),t-1), not do(X,_,t).
+:- do(X,move(-1),t-1), not do(X,_,t).
 
 %an elevator can't move on a position where it has previously been without first serving somewhere
 
