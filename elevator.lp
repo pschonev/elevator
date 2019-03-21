@@ -30,12 +30,17 @@ current_pos(X,N,t):-not do(X,_,t),holds(at(X,N),t-1).
 %stop elevators from leaving the building ...
 :-current_pos(X,N,t),not floor(N).
 
-
 %stop elevators from picking up nothing
 :-do(X,serve,t),not holds(request(_,Y),t-1), current_pos(X,Y,t).
 
 %stop elevevators from not picking up when they are on the floor with a request
 :- not do(X,serve,t), holds(request(_,Y),t-1), holds(at(X,Y),t-1).
+
+%stop elevator from going into a direction where there is no request
+
+%after elevator moved he has to do an action (move or serve) in the next timestep
+
+%an elevator can't move on a position where it has previously been without first serving somewhere
 
 %stop all elevators from doing nothing at a time step
 :- holds(_,t), not do(_,_,t). 
