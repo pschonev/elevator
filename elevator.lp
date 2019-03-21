@@ -34,7 +34,10 @@ current_pos(X,N,t):-not do(X,_,t),holds(at(X,N),t-1).
 %stop elevators from picking up nothing
 :-do(X,serve,t),not holds(request(_,Y),t-1), current_pos(X,Y,t).
 
-%check if nothing is being done
+%stop elevevators from not picking up when they are on the floor with a request
+:- not do(X,serve,t), holds(request(_,Y),t-1), holds(at(X,Y),t-1).
+
+%stop all elevators from doing nothing at a time step
 :- holds(_,t), not do(_,_,t). 
 
 %dirty way to save some headache...
