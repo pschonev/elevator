@@ -34,6 +34,9 @@ current_pos(X,N,t):-not do(X,_,t),holds(at(X,N),t-1).
 %stop elevators from picking up nothing
 :-do(X,serve,t),not holds(request(_,Y),t-1), current_pos(X,Y,t).
 
+%check if nothing is being done
+:- holds(_,t), not do(_,_,t). 
+
 %dirty way to save some headache...
 temp(X,serve,t,Y):- do(X,serve,t), current_pos(X,Y,t).
 
@@ -44,6 +47,10 @@ holds(at(X,Y),t):-current_pos(X,Y,t).
 holds(request(R,Y),t):-holds(request(R,Y),t-1),not temp(_,serve, t, Y), simple_requests(R).
 
 holds(request(deliver(X),Y),t):-holds(request(deliver(X),Y),t-1),not temp(elevator(X),serve, t, Y), agent(elevator(X)).
+
+%minimize 
+#minimize{1,t:holds(_,t)}.
+#minimize{1,X,Y,t:do(X,Y,t)}.
 
 #show do(A,X,t) : do(A,X,t). % output atoms indicating actions
 
