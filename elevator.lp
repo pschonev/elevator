@@ -33,21 +33,20 @@ current_pos(X,N,t):-not do(X,_,t),holds(at(X,N),t-1).
 %stop elevators from picking up nothing
 :-do(X,serve,t),not holds(request(_,Y),t-1), current_pos(X,Y,t).
 
-%stop elevevators from not picking up when they are on the floor with a request
+%stop elevevators from not picking up when they are on a floor with a request
 :- not do(X,serve,t), holds(request(_,Y),t-1), holds(at(X,Y),t-1).
 
 %stop elevator from going into a direction where there is no request
-%doesn't work
-%:- do(X,move(1),t), holds(at(X,Y),t-1), not holds(request(_,Z),t),floor(Z),Z>Y.
+%doesn't actually do anything; even if changing greater/lesser than signs it doesn't break the program
+notreq(Z,t) :- floor(Z), not holds(request(_,Z),t).
 
-%maybe doesn't help
+:- do(X,move(1),t+1), holds(at(X,Y),t), notreq(Z,t),Z<Y.
+:- do(X,move(-1),t+1), holds(at(X,Y),t), notreq(Z,t),Z>Y.
+
 %after elevator moved it has to do an action (move or serve) in the next timestep
-:- do(X,move(1),t-1), not do(X,_,t).
-:- do(X,move(-1),t-1), not do(X,_,t).
+:- do(X,move(1),t-1), not do(X,serve,t),not do(X,move(1),t).
+:- do(X,move(-1),t-1), not do(X,serve,t),not do(X,move(-1),t).
 
-%doesn't help either
-%an elevator can't move on a position where it has previously been without first serving somewhere
-:- holds(at(X,Y),t),holds(at(X,Y),s),not do(X,serve,u),step(u), u < s, u >= t.
 
 %stop all elevators from doing nothing at a time step
 :- holds(_,t), not do(_,_,t). 
