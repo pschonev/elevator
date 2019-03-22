@@ -37,7 +37,7 @@ current_pos(X,N,t):-not do(X,_,t),holds(at(X,N),t-1).
 :- not do(X,serve,t), holds(request(_,Y),t-1), holds(at(X,Y),t-1).
 
 %stop elevator from going into a direction where there is no request
-%doesn't actually do anything; even if changing greater/lesser than signs it doesn't break the program
+%doesn't actually do anything even if changing greater/lesser than signs it doesn't break the program
 notreq(Z,t) :- floor(Z), not holds(request(_,Z),t).
 
 :- do(X,move(1),t+1), holds(at(X,Y),t), notreq(Z,t),Z<Y.
