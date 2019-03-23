@@ -25,13 +25,7 @@ lowreq(U):- init(request(_,U)), not 1{init(request(_,V)):floor(V),U!=V,U>V}.
 
 
 #program step(t). % actions, effects, and minimization go below
-%{do(X,Y,t): actions(Y)}1:-agent(X).
-
-% case of one elevator: iteratively look up highest/lowest request and decide which one elevator is closer to and go in that direction
-do(X,move(1),t) :- holds(at(X,Y),t-1), not holds(request(_,Y),t-1), hireq(H), loreq(L), Y-L > H-Y, holds(request(_,H),t-1). 
-do(X,move(-1),t) :- holds(at(X,Y),t-1), not holds(request(_,Y),t-1), hireq(H), loreq(L), Y-L < H-Y, holds(request(_,L),t-1).
-do(X,move(1),t) :- holds(at(X,Y),t-1), not holds(request(_,Y),t-1), loreq(L), not holds(request(_,L),t-1).
-do(X,move(-1),t) :- holds(at(X,Y),t-1), not holds(request(_,Y),t-1), hireq(H), not holds(request(_,H),t-1). 
+{do(X,Y,t): actions(Y)}1:-agent(X). 
 
 do(X,serve,t) :- holds(at(X,Y),t-1), holds(request(_,Y),t-1).
 
@@ -40,6 +34,12 @@ holds(at(X,Y+1),t):-do(X,move(1),t), holds(at(X,Y),t-1).
 holds(at(X,Y-1),t):-do(X,move(-1),t), holds(at(X,Y),t-1).
 holds(at(X,Y),t):-do(X,serve,t), holds(at(X,Y),t-1).
 holds(at(X,Y),t):-not do(X,_,t),holds(at(X,Y),t-1).
+
+% case of one elevator: iteratively look up highest/lowest request and decide which one elevator is closer to and go in that direction
+%:- do(X,move(1),t), holds(at(X,Y),t-1), not holds(request(_,Y),t-1), hireq(H), loreq(L), Y-L > H-Y, holds(request(_,H),t-1). 
+%:- do(X,move(-1),t), holds(at(X,Y),t-1), not holds(request(_,Y),t-1), hireq(H), loreq(L), Y-L < H-Y, holds(request(_,L),t-1).
+%:- do(X,move(1),t), holds(at(X,Y),t-1), not holds(request(_,Y),t-1), loreq(L), not holds(request(_,L),t-1).
+%:- do(X,move(-1),t), holds(at(X,Y),t-1), not holds(request(_,Y),t-1), hireq(H), not holds(request(_,H),t-1). 
 
 
 %stop elevators from leaving the building ...
@@ -51,7 +51,7 @@ holds(at(X,Y),t):-not do(X,_,t),holds(at(X,Y),t-1).
 
 % stop elevevators from not picking up when they are on a floor with a request
 % this needs to be changed for multi-elevator instances to work efficiently!!!
-%:- not do(X,serve,t), holds(request(_,Y),t-1), holds(at(X,Y),t-1).
+:- not do(X,serve,t), holds(request(_,Y),t-1), holds(at(X,Y),t-1).
 
 % stop elevator from going into a direction where there is no request
 % doesn't actually do anything; even if changing greater/lesser than signs it doesn't break the program
