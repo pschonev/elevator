@@ -26,7 +26,6 @@ current_pos(X,N-1,t):-do(X,move(-1),t), holds(at(X,N),t-1).
 current_pos(X,N,t):-do(X,serve,t), holds(at(X,N),t-1).
 current_pos(X,N,t):-not do(X,_,t),holds(at(X,N),t-1).
 
-
 %stop elevators from leaving the building ...
 :-current_pos(X,N,t),not floor(N).
 
@@ -34,14 +33,13 @@ current_pos(X,N,t):-not do(X,_,t),holds(at(X,N),t-1).
 :-do(X,serve,t),not holds(request(_,Y),t-1), current_pos(X,Y,t).
 
 %stop elevevators from not picking up when they are on a floor with a request
-:- not do(X,serve,t), holds(request(_,Y),t-1), holds(at(X,Y),t-1).
+:- holds(request(_,Y),t+1),holds(at(_,Y),t).
+:- do(X,serve,t),holds(at(X,Y),t), do(X',serve,t),holds(at(X',Y),t),X!=X'. 
 
 %stop elevator from going into a direction where there is no request
 %doesn't actually do anything; even if changing greater/lesser than signs it doesn't break the program
-notreq(Z,t) :- floor(Z), not holds(request(_,Z),t).
-
-:- do(X,move(1),t+1), holds(at(X,Y),t), notreq(Z,t),Z<Y.
-:- do(X,move(-1),t+1), holds(at(X,Y),t), notreq(Z,t),Z>Y.
+%:- do(X,move(1),t+1), holds(at(X,Y),t), not 1{holds(request(_,Z),t): Z > Y,floor(Z)}.
+%:- do(X,move(-1),t+1), holds(at(X,Y),t), not 1{holds(request(_,Z),t): Z > Y,floor(Z)}.
 
 %after elevator moved it has to do an action (move or serve) in the next timestep
 :- do(X,move(1),t-1), not do(X,serve,t),not do(X,move(1),t).
