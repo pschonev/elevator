@@ -1,6 +1,8 @@
+%select target to walk to for each idle elevator!
+
 % INSERT NAMES AND EMAIL ADDRESSES OF YOUR GROUP MEMBERS:
-%
-%
+% Philipp Schoneville, schoneville@uni-potsdam.de
+% Jonas Mikkelsen, mikkelsen@uni-potsdam.de
 % note: maybe minimize the number of 'action()'s !?
 
 #include <incmode>. % built-in incremental mode of clingo
@@ -8,70 +10,61 @@
 #show. % output atoms will be declared below
 %#show holds/2.
 %#show do/3.
-%#show current_pos/3.
 
 #program base. % static rules go below
-dir(up;down).
-actions(serve;move(1);move(-1)). %find out if order is relevant for evaluation
-simple_requests(call(up);call(down)).
 holds(at(X, Y),0):- agent(X), init(at(X, Y)).
 holds(request(X,Y),0):-init(request(X,Y)).
+idle(X,0):-agent(X).
+current_pos(X,Y,0):-holds(at(X,Y),0).
 
 #program step(t). % actions, effects, and minimization go below
-{do(X,Y,t): actions(Y)}1:-agent(X).
 
-%basic positional information
-current_pos(X,N+1,t):-do(X,move(1),t), holds(at(X,N),t-1).
-current_pos(X,N-1,t):-do(X,move(-1),t), holds(at(X,N),t-1).
-current_pos(X,N,t):-do(X,serve,t), holds(at(X,N),t-1).
-current_pos(X,N,t):-not do(X,_,t),holds(at(X,N),t-1).
+{select(X,Y,t): holds(request(_,Y),t)}1:-agent(X), idle(X,t-1).
 
 
-%stop elevators from leaving the building ...
-:-current_pos(X,N,t),not floor(N).
+%idle flag
+idle(X,t):- do(X,serve,t), agent(X).
 
-%stop elevators from picking up nothing
-:-do(X,serve,t),not holds(request(_,Y),t-1), current_pos(X,Y,t).
+%handling select over time
+select(X,Y,t):-select(X,Y,t-1), not do(X,serve,t).
 
-%stop elevevators from not picking up when they are on a floor with a request
-:- not do(X,serve,t), holds(request(_,Y),t-1), holds(at(X,Y),t-1).
+%movement
+current_pos(X,Y+1,t):-current_pos(X,Y,t-1),select(X,Y2,t),Y2>Y.
+flag(t):-current_pos(X,Y,t-1),select(X,Y2,t),Y2>Y.
+current_pos(X,Y-1,t):-current_pos(X,Y,t-1), select(X,Y2,t),Y2<Y.
+flag(t):-current_pos(X,Y,t-1), select(X,Y2,t),Y2<Y.
+current_pos(X,Y,t):-current_pos(X,Y,t-1), not select(X,_,t).
+current_pos(X,Y,t):-current_pos(X,Y,t-1), not flag(t).
 
-%stop elevator from going into a direction where there is no request
-%doesn't actually do anything; even if changing greater/lesser than signs it doesn't break the program
-notreq(Z,t) :- floor(Z), not holds(request(_,Z),t).
-
-:- do(X,move(1),t+1), holds(at(X,Y),t), notreq(Z,t),Z<Y.
-:- do(X,move(-1),t+1), holds(at(X,Y),t), notreq(Z,t),Z>Y.
-
-%after elevator moved it has to do an action (move or serve) in the next timestep
-:- do(X,move(1),t-1), not do(X,serve,t),not do(X,move(1),t).
-:- do(X,move(-1),t-1), not do(X,serve,t),not do(X,move(-1),t).
+do(X,serve,t):-select(X,Y,t-1), current_pos(X,Y,t).
 
 
-%stop all elevators from doing nothing at a time step
-:- holds(_,t), not do(_,_,t). 
+%outputs
+do(X,move(1),t):-current_pos(X,Y,t), current_pos(X,Y2,t-1),Y>Y2.
+do(X,move(-1),t):-current_pos(X,Y,t), current_pos(X,Y2,t-1),Y<Y2.
+
+holds(at(X,Y),t):- current_pos(X,Y,t).
 
 %dirty way to save some headache...
 temp(X,serve,t,Y):- do(X,serve,t), current_pos(X,Y,t).
 
-%ensuring object permanence for elevators...
-holds(at(X,Y),t):-current_pos(X,Y,t).
+
+%handling requests over time
+holds(request(R,Y),t):-holds(request(R,Y),t-1), not temp(_,serve, t, Y)  .
 
 
-holds(request(R,Y),t):-holds(request(R,Y),t-1),not temp(_,serve, t, Y), simple_requests(R).
 
-holds(request(deliver(X),Y),t):-holds(request(deliver(X),Y),t-1),not temp(elevator(X),serve, t, Y), agent(elevator(X)).
-
-%minimize 
+%minimize
+#minimize{1,t: select(_,_,t)}.
 #minimize{1,t:holds(_,t)}.
-#minimize{1,X,Y,t:do(X,Y,t)}.
+%#minimize{1,X,Y,t:do(X,Y,t)}.
 
 #show do(A,X,t) : do(A,X,t). % output atoms indicating actions
 
 
-%#show current_pos(X,F,t): current_pos(X,F,t).
-
-%#show flag(t):flag(t).
+#show current_pos(X,F,t): current_pos(X,F,t).
+#show select(X,Y,t): select(X,Y,t).
+#show idle(X,t):idle(X,t).
 
 #program check(t). % fulfillment of all requests can, e.g., be checked as follows
 #show holds(X,t) : holds(X,t). % output atoms indicating states
