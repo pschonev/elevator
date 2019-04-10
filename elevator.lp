@@ -19,17 +19,28 @@ current_pos(X,Y,0):-holds(at(X,Y),0).
 
 #program step(t). % actions, effects, and minimization go below
 
-{select(X,Y,t): holds(request(_,Y),t)}1:-agent(X), idle(X,t-1).
-% :- select(X1,Y,t), select(X2,Y,t),X1!=X2.
-% :- select(X1,Y1,t), select(X2,Y2,t), current_pos(X1,Z1,t), current_pos(X2,Z2,t), X1!=X2, Z1>Z2, Y1<Y2.
+{select2(X,Y,t): holds(request(_,Y),t-1)}1:-idle(X,t-1).
 
+
+select(X,Y,t):-select2(X,Y,t).
+%implementing greedy approach
+
+:-select(X,Y,t), holds(request(_,Y2),t),current_pos(X,F,t), |(Y-F)|>|(Y2-F)|,Y!=Y2.
+
+%making sure the right elevator covers delivery
+:-select(elevator(X),Y,t), holds(request(deliver(X2),Y),t-1),X!=X2.
+
+
+%dist(Y+Y2,t):-select(A,Y,t), current_pos(A,Y2,t).
+
+:-select(X,Y,_),select(X2,Y,_),X!=X2.
 
 %idle flag
-idle(X,t):- do(X,serve,t), agent(X).
+idle(X,t):- do(X,serve,t), agent(X).%, holds(request(_,_),t-1).
 
 %handling select over time
-select(X,Y,t):-select(X,Y,t-1), not do(X,serve,t-1).
-
+%select(X,Y,t):-select(X,Y,t-1), not do(X,serve,t).
+select(X,Y,t):-select(X,Y,t-1), not idle(X,t-1).
 %movement
 current_pos(X,Y+1,t):-current_pos(X,Y,t-1),select(X,Y2,t),Y2>Y.
 flag(t):-current_pos(X,Y,t-1),select(X,Y2,t),Y2>Y.
@@ -38,7 +49,7 @@ flag(t):-current_pos(X,Y,t-1), select(X,Y2,t),Y2<Y.
 current_pos(X,Y,t):-current_pos(X,Y,t-1), not select(X,_,t).
 current_pos(X,Y,t):-current_pos(X,Y,t-1), not flag(t).
 
-do(X,serve,t):-select(X,Y,t-1), current_pos(X,Y,t-1).
+do(X,serve,t):-select(X,Y,t-1), current_pos(X,Y,t-1), not do(X,serve,t-1).
 
 
 %outputs
@@ -52,21 +63,22 @@ temp(X,serve,t,Y):- do(X,serve,t), current_pos(X,Y,t).
 
 
 %handling requests over time
-holds(request(R,Y),t):-holds(request(R,Y),t-1), not temp(_,serve, t, Y)  .
+holds(request(R,Y),t):-holds(request(R,Y),t-1), not temp(_,serve, t, Y) .
 
 
 
 %minimize
-#minimize{1,t: select(_,_,t)}.
-#minimize{1,t:holds(_,t)}.
+%#minimize{1,t: select(_,_,t)}.
+%#minimize{1,t:holds(_,t)}.
 #minimize{1,X,Y,t:do(X,Y,t)}.
+%#minimize{1,Y,t:dist(Y,t)}.
 
 #show do(A,X,t) : do(A,X,t). % output atoms indicating actions
 
 
-#show current_pos(X,F,t): current_pos(X,F,t).
-#show select(X,Y,t): select(X,Y,t).
-#show idle(X,t):idle(X,t).
+%#show current_pos(X,F,t): current_pos(X,F,t).
+%#show select(X,Y,t): select(X,Y,t).
+%#show idle(X,t):idle(X,t).
 
 #program check(t). % fulfillment of all requests can, e.g., be checked as follows
 #show holds(X,t) : holds(X,t). % output atoms indicating states
